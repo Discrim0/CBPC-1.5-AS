@@ -8,6 +8,10 @@ BSFixedString belly("HDT Belly");
 BSFixedString pelvis("NPC Pelvis [Pelv]");
 BSFixedString spine1("NPC Spine1 [Spn1]");
 BSFixedString highheel("NPC");
+BSFixedString leftAnus("NPC LB Anus2");
+BSFixedString rightAnus("NPC RB Anus2");
+BSFixedString upperAnus("NPC RT Anus2");
+BSFixedString downAnus("NPC LT Anus2");
 
 //## thing_Refresh_node_lock
 // editing the node update time seems to affect the entire node tree even if without editing entire node tree
@@ -713,10 +717,144 @@ void Thing::updatePelvis(Actor *actor)
 	NiAVObject* backPusObj = loadedState->node->GetObjectByName(&backPus.data);
 	NiAVObject* frontPusObj = loadedState->node->GetObjectByName(&frontPus.data);
 	NiAVObject* pelvisObj = loadedState->node->GetObjectByName(&pelvis.data);
+	NiAVObject* leftAnusObj = loadedState->node->GetObjectByName(&leftAnus.data);
+	NiAVObject* rightAnusObj = loadedState->node->GetObjectByName(&rightAnus.data);
+	NiAVObject* upperAnusObj = loadedState->node->GetObjectByName(&upperAnus.data);
+	NiAVObject* downAnusObj = loadedState->node->GetObjectByName(&downAnus.data);
 	thing_ReadNode_lock.unlock();
 
 	if (!leftPusObj || !rightPusObj || !backPusObj || !frontPusObj || !pelvisObj)
 	{
+		if (!leftAnusObj || !rightAnusObj || upperAnusObj || downAnusObj) {
+			if (updatePussyFirstRun)
+			{
+				updatePussyFirstRun = false;
+				leftAnusDefaultPos = leftAnusObj->m_localTransform.pos;
+				rightAnusDefaultPos = rightAnusObj->m_localTransform.pos;
+				upperAnusDefaultPos = upperAnusObj->m_localTransform.pos;
+				lowerAnusDefaultPos = downAnusObj->m_localTransform.pos;
+			}
+
+			leftAnusObj->m_localTransform.pos = leftAnusDefaultPos;
+			rightAnusObj->m_localTransform.pos = rightAnusDefaultPos;
+			upperAnusObj->m_localTransform.pos = upperAnusDefaultPos;
+			downAnusObj->m_localTransform.pos = lowerAnusDefaultPos;
+
+			if (!ActorCollisionsEnabled)
+			{
+				return;
+			}
+
+			// Collision Stuff Start
+			NiPoint3 collisionVector = emptyPoint;
+
+			NiMatrix33 pelvisRotation;
+			NiPoint3 pelvisPosition;
+
+			pelvisRotation = pelvisObj->m_worldTransform.rot;
+			pelvisPosition = pelvisObj->m_worldTransform.pos;
+
+			std::vector<int> thingIdList;
+			std::vector<int> hashIdList;
+			NiPoint3 playerPos = (*g_thePlayer)->loadedState->node->m_worldTransform.pos;
+			for (int i = 0; i < thingCollisionSpheres.size(); i++)
+			{
+				thingCollisionSpheres[i].worldPos = pelvisPosition + (pelvisRotation * thingCollisionSpheres[i].offset100);
+				hashIdList = GetHashIdsFromPos(thingCollisionSpheres[i].worldPos - playerPos, thingCollisionSpheres[i].radius100);
+				for (int m = 0; m < hashIdList.size(); m++)
+				{
+					if (!(std::find(thingIdList.begin(), thingIdList.end(), hashIdList[m]) != thingIdList.end()))
+					{
+						thingIdList.emplace_back(hashIdList[m]);
+					}
+				}
+			}
+			for (int i = 0; i < thingCollisionCapsules.size(); i++)
+			{
+				thingCollisionCapsules[i].End1_worldPos = pelvisPosition + (pelvisRotation * thingCollisionCapsules[i].End1_offset100);
+				thingCollisionCapsules[i].End2_worldPos = pelvisPosition + (pelvisRotation * thingCollisionCapsules[i].End2_offset100);
+				hashIdList = GetHashIdsFromPos((thingCollisionCapsules[i].End1_worldPos + thingCollisionCapsules[i].End2_worldPos) * 0.5f - playerPos
+					, (thingCollisionCapsules[i].End1_radius100 + thingCollisionCapsules[i].End2_radius100) * 0.5f);
+				for (int m = 0; m < hashIdList.size(); m++)
+				{
+					if (!(std::find(thingIdList.begin(), thingIdList.end(), hashIdList[m]) != thingIdList.end()))
+					{
+						thingIdList.emplace_back(hashIdList[m]);
+					}
+				}
+			}
+
+
+			NiPoint3 collisionDiff = emptyPoint;
+
+			for (int j = 0; j < thingIdList.size(); j++)
+			{
+				int id = thingIdList[j];
+				if (partitions.find(id) != partitions.end())
+				{
+					//LOG_INFO("Pelvis hashId=%d", id);
+					for (int i = 0; i < partitions[id].partitionCollisions.size(); i++)
+					{
+						if (partitions[id].partitionCollisions[i].colliderActor == actor && partitions[id].partitionCollisions[i].colliderNodeName.find("Genital") != std::string::npos)
+							continue;
+
+						if (IgnoreAllSelfColliders && partitions[id].partitionCollisions[i].colliderActor == actor)
+							continue;
+
+						if (partitions[id].partitionCollisions[i].colliderActor == actor && std::find(IgnoredSelfCollidersList.begin(), IgnoredSelfCollidersList.end(), partitions[id].partitionCollisions[i].colliderNodeName) != IgnoredSelfCollidersList.end())
+							continue;
+
+						if (std::find(IgnoredCollidersList.begin(), IgnoredCollidersList.end(), partitions[id].partitionCollisions[i].colliderNodeName) != IgnoredCollidersList.end())
+							continue;
+
+						InterlockedIncrement(&callCount);
+						partitions[id].partitionCollisions[i].CollidedWeight = actorWeight;
+
+						//now not that do reach max value just by get closer and just affected by the collider size
+						collisionDiff = partitions[id].partitionCollisions[i].CheckPelvisCollision(thingCollisionSpheres, thingCollisionCapsules);
+						collisionVector = collisionVector + collisionDiff;
+					}
+				}
+			}
+
+			// Collision Stuff End
+
+			NiPoint3 leftVector = collisionVector;
+			NiPoint3 rightVector = collisionVector;
+			NiPoint3 backVector = collisionVector;
+			NiPoint3 frontVector = collisionVector;
+
+			float opening = distance(collisionVector, emptyPoint);
+
+			CalculateDiffVagina(leftVector, opening, true, true);
+			CalculateDiffVagina(rightVector, opening, true, false);
+			CalculateDiffVagina(backVector, opening, false, true);
+			CalculateDiffVagina(frontVector, opening, false, false);
+
+			NormalizeNiPoint(leftVector, thing_vaginaOpeningLimit * -1.0f, thing_vaginaOpeningLimit);
+			NormalizeNiPoint(rightVector, thing_vaginaOpeningLimit * -1.0f, thing_vaginaOpeningLimit);
+
+			NiPoint3 upVector;
+			upVector.x = rightVector.y;
+			upVector.y = leftVector.x;
+			upVector.z = leftVector.z;
+			NiPoint3 downVector;
+			downVector.x = rightVector.y;
+			downVector.y = rightVector.x;
+			downVector.z = rightVector.z;
+
+			thing_SetNode_lock.lock();
+			leftAnusObj->m_localTransform.pos = leftAnusDefaultPos + downVector;
+			rightAnusObj->m_localTransform.pos = rightAnusDefaultPos + upVector;
+			upperAnusObj->m_localTransform.pos = upperAnusDefaultPos + rightVector;
+			downAnusObj->m_localTransform.pos = lowerAnusDefaultPos + leftVector;
+			thing_SetNode_lock.unlock();
+
+			RefreshNode(leftAnusObj);
+			RefreshNode(rightAnusObj);
+			RefreshNode(upperAnusObj);
+			RefreshNode(downAnusObj);
+		}
 		return;
 	}
 	else
@@ -728,6 +866,11 @@ void Thing::updatePelvis(Actor *actor)
 			auto leftpair = std::make_pair(actor->baseForm->formID, leftPus.data);
 			thing_map_lock.lock();
 			std::map<std::pair<UInt32, const char *>, NiPoint3>::const_iterator posMap = thingDefaultPosList.find(leftpair);
+
+			leftAnusDefaultPos = leftAnusObj->m_localTransform.pos;
+			rightAnusDefaultPos = rightAnusObj->m_localTransform.pos;
+			upperAnusDefaultPos = upperAnusObj->m_localTransform.pos;
+			lowerAnusDefaultPos = downAnusObj->m_localTransform.pos;
 
 			if (posMap == thingDefaultPosList.end())
 			{
@@ -800,6 +943,10 @@ void Thing::updatePelvis(Actor *actor)
 		rightPusObj->m_localTransform.pos = rightPussyDefaultPos;
 		backPusObj->m_localTransform.pos = backPussyDefaultPos;
 		frontPusObj->m_localTransform.pos = frontPussyDefaultPos;
+		leftAnusObj->m_localTransform.pos = leftAnusDefaultPos;
+		rightAnusObj->m_localTransform.pos = rightAnusDefaultPos;
+		upperAnusObj->m_localTransform.pos = upperAnusDefaultPos;
+		downAnusObj->m_localTransform.pos = lowerAnusDefaultPos;
 		thing_SetNode_lock.unlock();
 	}
 
@@ -901,17 +1048,35 @@ void Thing::updatePelvis(Actor *actor)
 	frontVector.y = clamp(frontVector.y, thing_vaginaOpeningLimit*-0.125f, thing_vaginaOpeningLimit*0.125f);
 	frontVector.z = clamp(frontVector.z, thing_vaginaOpeningLimit*-0.25f, thing_vaginaOpeningLimit*0.25f);
 	
+	NiPoint3 upVector;
+	upVector.x = rightVector.y;
+	upVector.y = leftVector.x;
+	upVector.z = leftVector.z;
+	NiPoint3 downVector;
+	downVector.x = rightVector.y;
+	downVector.y = rightVector.x;
+	downVector.z = rightVector.z;
+
 	thing_SetNode_lock.lock();
 	leftPusObj->m_localTransform.pos = leftPussyDefaultPos + leftVector;
 	rightPusObj->m_localTransform.pos = rightPussyDefaultPos + rightVector;
 	backPusObj->m_localTransform.pos = backPussyDefaultPos + backVector;
 	frontPusObj->m_localTransform.pos = frontPussyDefaultPos + frontVector;
+
+	leftAnusObj->m_localTransform.pos = leftAnusDefaultPos + downVector;
+	rightAnusObj->m_localTransform.pos = rightAnusDefaultPos + upVector;
+	upperAnusObj->m_localTransform.pos = upperAnusDefaultPos + rightVector;
+	downAnusObj->m_localTransform.pos = lowerAnusDefaultPos + leftVector;
 	thing_SetNode_lock.unlock();
 
 	RefreshNode(leftPusObj);
 	RefreshNode(rightPusObj);
 	RefreshNode(backPusObj);
 	RefreshNode(frontPusObj);
+	RefreshNode(leftAnusObj);
+	RefreshNode(rightAnusObj);
+	RefreshNode(upperAnusObj);
+	RefreshNode(downAnusObj);
 	/*QueryPerformanceCounter(&endingTime);
 	elapsedMicroseconds.QuadPart = endingTime.QuadPart - startingTime.QuadPart;
 	elapsedMicroseconds.QuadPart *= 1000000000LL;

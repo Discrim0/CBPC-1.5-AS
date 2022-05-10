@@ -307,6 +307,10 @@ public:
 	NiPoint3 rightPussyDefaultPos;
 	NiPoint3 backPussyDefaultPos;
 	NiPoint3 frontPussyDefaultPos;
+	NiPoint3 leftAnusDefaultPos;
+	NiPoint3 rightAnusDefaultPos;
+	NiPoint3 upperAnusDefaultPos;
+	NiPoint3 lowerAnusDefaultPos;
 
 	bool updateBellyFirstRun = true;
 	NiPoint3 bellyDefaultPos;
