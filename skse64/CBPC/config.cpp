@@ -74,6 +74,7 @@ std::vector<std::string> bellybulgenodesList;
 
 float vaginaOpeningLimit = 5.0f;
 float vaginaOpeningMultiplier = 4.0f;
+float anusOpeningLimit = 5.0f;
 
 int logging = 0;
 

@@ -831,8 +831,14 @@ void Thing::updatePelvis(Actor *actor)
 			CalculateDiffVagina(backVector, opening, false, true);
 			CalculateDiffVagina(frontVector, opening, false, false);
 
-			NormalizeNiPoint(leftVector, thing_vaginaOpeningLimit * -1.0f, thing_vaginaOpeningLimit);
-			NormalizeNiPoint(rightVector, thing_vaginaOpeningLimit * -1.0f, thing_vaginaOpeningLimit);
+			if (anusOpeningLimit != 5.0f) {
+				NormalizeNiPoint(leftVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
+				NormalizeNiPoint(rightVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
+			}
+			else {
+				NormalizeNiPoint(leftVector, thing_vaginaOpeningLimit * -1.0f, thing_vaginaOpeningLimit);
+				NormalizeNiPoint(rightVector, thing_vaginaOpeningLimit * -1.0f, thing_vaginaOpeningLimit);
+			}
 
 			NiPoint3 upVector;
 			upVector.x = rightVector.y;
@@ -1048,6 +1054,7 @@ void Thing::updatePelvis(Actor *actor)
 	frontVector.y = clamp(frontVector.y, thing_vaginaOpeningLimit*-0.125f, thing_vaginaOpeningLimit*0.125f);
 	frontVector.z = clamp(frontVector.z, thing_vaginaOpeningLimit*-0.25f, thing_vaginaOpeningLimit*0.25f);
 	
+	//
 	NiPoint3 upVector;
 	upVector.x = rightVector.y;
 	upVector.y = leftVector.x;
@@ -1062,6 +1069,13 @@ void Thing::updatePelvis(Actor *actor)
 	rightPusObj->m_localTransform.pos = rightPussyDefaultPos + rightVector;
 	backPusObj->m_localTransform.pos = backPussyDefaultPos + backVector;
 	frontPusObj->m_localTransform.pos = frontPussyDefaultPos + frontVector;
+
+	if (anusOpeningLimit != 5.0f) {
+		CalculateDiffVagina(leftVector, opening, true, true);
+		CalculateDiffVagina(rightVector, opening, true, false);
+		NormalizeNiPoint(leftVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
+		NormalizeNiPoint(rightVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
+	}
 
 	leftAnusObj->m_localTransform.pos = leftAnusDefaultPos + downVector;
 	rightAnusObj->m_localTransform.pos = rightAnusDefaultPos + upVector;
