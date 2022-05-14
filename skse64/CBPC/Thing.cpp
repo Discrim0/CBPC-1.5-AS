@@ -725,7 +725,7 @@ void Thing::updatePelvis(Actor *actor)
 
 	if (!leftPusObj || !rightPusObj || !backPusObj || !frontPusObj || !pelvisObj)
 	{
-		if (leftAnusObj && rightAnusObj && upperAnusObj && downAnusObj) {
+		if (leftAnusObj && rightAnusObj && upperAnusObj && downAnusObj && pelvisObj) {
 			if (updatePussyFirstRun)
 			{
 				updatePussyFirstRun = false;

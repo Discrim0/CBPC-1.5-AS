@@ -2809,7 +2809,7 @@ bool ReadWriteCBPCConfig(std::string filepath, std::string VaginaOpeningLimit, s
 		}
 		else if (pelvisnodeIsNext) {
 			//if (femaleconfig) {
-				line = "0,-1,-3.5," + CollisionSize + " | 0,-1,-3.5," + CollisionSize;
+			line = "0,-1,-3.5," + CollisionSize + " | 0,-1,-3.5," + CollisionSize;
 			//}
 			/*else {
 				line = "5,-2,0,7 & -5,-2,0," + CollisionSize + " | 6,-2,0,7.5 & -6,-2,0," + CollisionSize;
