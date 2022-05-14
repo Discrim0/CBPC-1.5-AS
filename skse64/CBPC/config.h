@@ -33,6 +33,8 @@
 #include "skse64/openvr_1_0_12.h"
 #endif
 
+void ClearActors();
+
 typedef std::unordered_map<std::string, float> configEntry_t;
 typedef std::unordered_map<std::string, configEntry_t> config_t;
 

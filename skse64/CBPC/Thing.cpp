@@ -725,20 +725,72 @@ void Thing::updatePelvis(Actor *actor)
 
 	if (!leftPusObj || !rightPusObj || !backPusObj || !frontPusObj || !pelvisObj)
 	{
-		if (!leftAnusObj || !rightAnusObj || upperAnusObj || downAnusObj) {
+		if (leftAnusObj && rightAnusObj && upperAnusObj && downAnusObj) {
 			if (updatePussyFirstRun)
 			{
 				updatePussyFirstRun = false;
-				leftAnusDefaultPos = leftAnusObj->m_localTransform.pos;
-				rightAnusDefaultPos = rightAnusObj->m_localTransform.pos;
-				upperAnusDefaultPos = upperAnusObj->m_localTransform.pos;
-				lowerAnusDefaultPos = downAnusObj->m_localTransform.pos;
+
+				auto aleftpair = std::make_pair(actor->baseForm->formID, leftAnus.data);
+				thing_map_lock.lock();
+				std::map<std::pair<UInt32, const char*>, NiPoint3>::const_iterator posMap = thingDefaultPosList.find(aleftpair);
+
+				if (posMap == thingDefaultPosList.end())
+				{
+					leftAnusDefaultPos = leftAnusObj->m_localTransform.pos;
+					thingDefaultPosList[aleftpair] = leftAnusDefaultPos;
+				}
+				else
+				{
+					leftAnusDefaultPos = posMap->second;
+				}
+
+				auto arightpair = std::make_pair(actor->baseForm->formID, rightAnus.data);
+				posMap = thingDefaultPosList.find(arightpair);
+
+				if (posMap == thingDefaultPosList.end())
+				{
+					rightAnusDefaultPos = rightAnusObj->m_localTransform.pos;
+					thingDefaultPosList[arightpair] = rightAnusDefaultPos;
+				}
+				else
+				{
+					rightAnusDefaultPos = posMap->second;
+				}
+
+				auto aupperpair = std::make_pair(actor->baseForm->formID, upperAnus.data);
+				posMap = thingDefaultPosList.find(aupperpair);
+
+				if (posMap == thingDefaultPosList.end())
+				{
+					upperAnusDefaultPos = upperAnusObj->m_localTransform.pos;
+					thingDefaultPosList[aupperpair] = upperAnusDefaultPos;
+				}
+				else
+				{
+					upperAnusDefaultPos = posMap->second;
+				}
+
+				auto alowerpair = std::make_pair(actor->baseForm->formID, downAnus.data);
+				posMap = thingDefaultPosList.find(alowerpair);
+
+				if (posMap == thingDefaultPosList.end())
+				{
+					lowerAnusDefaultPos = downAnusObj->m_localTransform.pos;
+					thingDefaultPosList[alowerpair] = lowerAnusDefaultPos;
+				}
+				else
+				{
+					lowerAnusDefaultPos = posMap->second;
+				}
+				thing_map_lock.unlock();
 			}
 
+			thing_map_lock.lock();
 			leftAnusObj->m_localTransform.pos = leftAnusDefaultPos;
 			rightAnusObj->m_localTransform.pos = rightAnusDefaultPos;
 			upperAnusObj->m_localTransform.pos = upperAnusDefaultPos;
 			downAnusObj->m_localTransform.pos = lowerAnusDefaultPos;
+			thing_map_lock.unlock();
 
 			if (!ActorCollisionsEnabled)
 			{
@@ -831,14 +883,10 @@ void Thing::updatePelvis(Actor *actor)
 			CalculateDiffVagina(backVector, opening, false, true);
 			CalculateDiffVagina(frontVector, opening, false, false);
 
-			if (anusOpeningLimit != 5.0f) {
-				NormalizeNiPoint(leftVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
-				NormalizeNiPoint(rightVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
-			}
-			else {
-				NormalizeNiPoint(leftVector, thing_vaginaOpeningLimit * -1.0f, thing_vaginaOpeningLimit);
-				NormalizeNiPoint(rightVector, thing_vaginaOpeningLimit * -1.0f, thing_vaginaOpeningLimit);
-			}
+			//
+			NormalizeNiPoint(leftVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
+			NormalizeNiPoint(rightVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
+
 
 			NiPoint3 upVector;
 			upVector.x = rightVector.y;
@@ -856,10 +904,11 @@ void Thing::updatePelvis(Actor *actor)
 			downAnusObj->m_localTransform.pos = lowerAnusDefaultPos + leftVector;
 			thing_SetNode_lock.unlock();
 
+			/*
 			RefreshNode(leftAnusObj);
 			RefreshNode(rightAnusObj);
 			RefreshNode(upperAnusObj);
-			RefreshNode(downAnusObj);
+			RefreshNode(downAnusObj);*/
 		}
 		return;
 	}
@@ -872,11 +921,6 @@ void Thing::updatePelvis(Actor *actor)
 			auto leftpair = std::make_pair(actor->baseForm->formID, leftPus.data);
 			thing_map_lock.lock();
 			std::map<std::pair<UInt32, const char *>, NiPoint3>::const_iterator posMap = thingDefaultPosList.find(leftpair);
-
-			leftAnusDefaultPos = leftAnusObj->m_localTransform.pos;
-			rightAnusDefaultPos = rightAnusObj->m_localTransform.pos;
-			upperAnusDefaultPos = upperAnusObj->m_localTransform.pos;
-			lowerAnusDefaultPos = downAnusObj->m_localTransform.pos;
 
 			if (posMap == thingDefaultPosList.end())
 			{
@@ -938,6 +982,59 @@ void Thing::updatePelvis(Actor *actor)
 			{
 				frontPussyDefaultPos = posMap->second;
 			}
+
+			auto aleftpair = std::make_pair(actor->baseForm->formID, leftAnus.data);
+			posMap = thingDefaultPosList.find(aleftpair);
+
+			if (posMap == thingDefaultPosList.end())
+			{
+				leftAnusDefaultPos = leftAnusObj->m_localTransform.pos;
+				thingDefaultPosList[aleftpair] = leftAnusDefaultPos;
+			}
+			else
+			{
+				leftAnusDefaultPos = posMap->second;
+			}
+
+			auto arightpair = std::make_pair(actor->baseForm->formID, rightAnus.data);
+			posMap = thingDefaultPosList.find(arightpair);
+
+			if (posMap == thingDefaultPosList.end())
+			{
+				rightAnusDefaultPos = rightAnusObj->m_localTransform.pos;
+				thingDefaultPosList[arightpair] = rightAnusDefaultPos;
+			}
+			else
+			{
+				rightAnusDefaultPos = posMap->second;
+			}
+
+			auto aupperpair = std::make_pair(actor->baseForm->formID, upperAnus.data);
+			posMap = thingDefaultPosList.find(aupperpair);
+
+			if (posMap == thingDefaultPosList.end())
+			{
+				upperAnusDefaultPos = upperAnusObj->m_localTransform.pos;
+				thingDefaultPosList[aupperpair] = upperAnusDefaultPos;
+			}
+			else
+			{
+				upperAnusDefaultPos = posMap->second;
+			}
+
+			auto alowerpair = std::make_pair(actor->baseForm->formID, downAnus.data);
+			posMap = thingDefaultPosList.find(alowerpair);
+
+			if (posMap == thingDefaultPosList.end())
+			{
+				lowerAnusDefaultPos = downAnusObj->m_localTransform.pos;
+				thingDefaultPosList[alowerpair] = lowerAnusDefaultPos;
+			}
+			else
+			{
+				lowerAnusDefaultPos = posMap->second;
+			}
+
 			thing_map_lock.unlock();
 			LOG_INFO("Left pussy default pos -> %g %g %g , Right pussy default pos ->  %g %g %g , Back pussy default pos ->  %g %g %g , Front pussy default pos ->  %g %g %g", leftPussyDefaultPos.x, leftPussyDefaultPos.y, leftPussyDefaultPos.z, rightPussyDefaultPos.x, rightPussyDefaultPos.y, rightPussyDefaultPos.z, backPussyDefaultPos.x, backPussyDefaultPos.y, backPussyDefaultPos.z, frontPussyDefaultPos.x, frontPussyDefaultPos.y, frontPussyDefaultPos.z);
 		}
@@ -1054,7 +1151,24 @@ void Thing::updatePelvis(Actor *actor)
 	frontVector.y = clamp(frontVector.y, thing_vaginaOpeningLimit*-0.125f, thing_vaginaOpeningLimit*0.125f);
 	frontVector.z = clamp(frontVector.z, thing_vaginaOpeningLimit*-0.25f, thing_vaginaOpeningLimit*0.25f);
 	
+	thing_SetNode_lock.lock();
+	leftPusObj->m_localTransform.pos = leftPussyDefaultPos + leftVector;
+	rightPusObj->m_localTransform.pos = rightPussyDefaultPos + rightVector;
+	backPusObj->m_localTransform.pos = backPussyDefaultPos + backVector;
+	frontPusObj->m_localTransform.pos = frontPussyDefaultPos + frontVector;
+	thing_SetNode_lock.unlock();
+
+	RefreshNode(leftPusObj);
+	RefreshNode(rightPusObj);
+	RefreshNode(backPusObj);
+	RefreshNode(frontPusObj);
+
 	//
+	CalculateDiffVagina(leftVector, opening, true, true);
+	CalculateDiffVagina(rightVector, opening, true, false);
+	NormalizeNiPoint(leftVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
+	NormalizeNiPoint(rightVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
+
 	NiPoint3 upVector;
 	upVector.x = rightVector.y;
 	upVector.y = leftVector.x;
@@ -1065,32 +1179,18 @@ void Thing::updatePelvis(Actor *actor)
 	downVector.z = rightVector.z;
 
 	thing_SetNode_lock.lock();
-	leftPusObj->m_localTransform.pos = leftPussyDefaultPos + leftVector;
-	rightPusObj->m_localTransform.pos = rightPussyDefaultPos + rightVector;
-	backPusObj->m_localTransform.pos = backPussyDefaultPos + backVector;
-	frontPusObj->m_localTransform.pos = frontPussyDefaultPos + frontVector;
-
-	if (anusOpeningLimit != 5.0f) {
-		CalculateDiffVagina(leftVector, opening, true, true);
-		CalculateDiffVagina(rightVector, opening, true, false);
-		NormalizeNiPoint(leftVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
-		NormalizeNiPoint(rightVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
-	}
-
 	leftAnusObj->m_localTransform.pos = leftAnusDefaultPos + downVector;
 	rightAnusObj->m_localTransform.pos = rightAnusDefaultPos + upVector;
 	upperAnusObj->m_localTransform.pos = upperAnusDefaultPos + rightVector;
 	downAnusObj->m_localTransform.pos = lowerAnusDefaultPos + leftVector;
 	thing_SetNode_lock.unlock();
 
-	RefreshNode(leftPusObj);
-	RefreshNode(rightPusObj);
-	RefreshNode(backPusObj);
-	RefreshNode(frontPusObj);
+	/*
 	RefreshNode(leftAnusObj);
 	RefreshNode(rightAnusObj);
 	RefreshNode(upperAnusObj);
-	RefreshNode(downAnusObj);
+	RefreshNode(downAnusObj);*/
+
 	/*QueryPerformanceCounter(&endingTime);
 	elapsedMicroseconds.QuadPart = endingTime.QuadPart - startingTime.QuadPart;
 	elapsedMicroseconds.QuadPart *= 1000000000LL;

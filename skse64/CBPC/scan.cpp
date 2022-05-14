@@ -13,6 +13,10 @@ std::unordered_map<UInt32, SimObj> actors;
 std::vector<UInt32> notExteriorWorlds = { 0x69857, 0x1EE62, 0x20DCB, 0x1FAE2, 0x34240, 0x50015, 0x2C965, 0x29AB7, 0x4F838, 0x3A9D6, 0x243DE, 0xC97EB, 0xC350D, 0x1CDD3, 0x1CDD9, 0x21EDB, 0x1E49D, 0x2B101, 0x2A9D8, 0x20BFE };
 
 
+void ClearActors() {
+	actors.clear();
+}
+
 //void UpdateWorldDataToChild(NiAVObject)
 void dumpTransform(NiTransform t) {
 	Console_Print("%8.2f %8.2f %8.2f", t.rot.data[0][0], t.rot.data[0][1], t.rot.data[0][2]);

@@ -1282,6 +1282,10 @@ void loadCollisionConfig()
 							{
 								vaginaOpeningLimit = variableValue;
 							}
+							else if (variableName == "AnusOpeningLimit")
+							{
+								anusOpeningLimit = variableValue;
+							}
 							else if (variableName == "VaginaOpeningMultiplier")
 							{
 								vaginaOpeningMultiplier = variableValue;
@@ -2782,6 +2786,104 @@ void StopPhysics(StaticFunctionTag* base, Actor* actor, BSFixedString nodeName)
 
 //Initializes openvr system. Required for haptic triggers.
 
+std::shared_mutex config_writeconfiglock;
+
+bool ReadWriteCBPCConfig(std::string filepath, std::string VaginaOpeningLimit, std::string  AnusOpeningLimit, std::string CollisionSize, bool femaleconfig) {
+	std::vector<std::string> lines;
+	std::string line;
+
+	std::ifstream input_file(filepath);
+	if (!input_file.is_open()) {
+		return false;
+	}
+
+	bool pelvisnodeIsNext = false;
+	while (std::getline(input_file, line)) {
+		if (line.find("VaginaOpeningLimit") != std::string::npos) {
+			line = "VaginaOpeningLimit = " + VaginaOpeningLimit;
+			lines.push_back(line);
+		}
+		else if (line.find("AnusOpeningLimit") != std::string::npos) {
+			line = "AnusOpeningLimit = " + AnusOpeningLimit;
+			lines.push_back(line);
+		}
+		else if (pelvisnodeIsNext) {
+			//if (femaleconfig) {
+				line = "0,-1,-3.5," + CollisionSize + " | 0,-1,-3.5," + CollisionSize;
+			//}
+			/*else {
+				line = "5,-2,0,7 & -5,-2,0," + CollisionSize + " | 6,-2,0,7.5 & -6,-2,0," + CollisionSize;
+			}*/
+			lines.push_back(line);
+			pelvisnodeIsNext = false;
+		}
+		else if (line.find("[NPC Pelvis [Pelv]]") != std::string::npos) {
+			lines.push_back(line);
+			pelvisnodeIsNext = true;
+		}
+		else {
+			lines.push_back(line);
+		}
+	}
+
+	//Write
+	std::ofstream ofs(filepath);
+	for (int i = 0; i < lines.size(); ++i) {
+		ofs << lines[i] << "\n";
+	}
+	ofs.close();
+
+	return true;
+}
+
+BSFixedString CBPCUpdatePhysics(StaticFunctionTag* base, BSFixedString isAnal, BSFixedString isGroup, BSFixedString isVaginal, BSFixedString femboy, BSFixedString VaginaOpeningLimit, BSFixedString AnusOpeningLimit, BSFixedString PelvisCollisionSizeV, BSFixedString PelvisCollisionSizeA)
+{
+	std::string sAnal = isAnal;
+	std::string sGroup = isGroup;
+	std::string sVaginal = isVaginal;
+	std::string sfemboy = femboy;
+	std::string sVaginaOpeningLimit = VaginaOpeningLimit;
+	std::string sAnusOpeningLimit = AnusOpeningLimit;
+	std::string sPelvisCollisionSizeV = PelvisCollisionSizeV;
+	std::string sPelvisCollisionSizeA = PelvisCollisionSizeA;
+	std::string sCollisionSize = "";
+
+	if (sAnal == "1" || sfemboy == "1") {
+		sVaginaOpeningLimit = "0";
+		sCollisionSize = sPelvisCollisionSizeA;
+		if (sGroup == "1" && sVaginal == "1" && sfemboy == "0") {
+			sVaginaOpeningLimit = VaginaOpeningLimit;
+			sCollisionSize = (std::stof(sPelvisCollisionSizeV) + std::stof(sPelvisCollisionSizeA)) / 2;
+		}
+	}
+	else
+	{
+		sAnusOpeningLimit = "0";
+		sCollisionSize = PelvisCollisionSizeV;
+	}
+
+	std::string	runtimeDirectory = GetRuntimeDirectory();
+	
+	config_writeconfiglock.lock();
+	bool cwriteresult = ReadWriteCBPCConfig(runtimeDirectory + "Data\\SKSE\\Plugins\\CBPCollisionConfig.txt", sVaginaOpeningLimit, sAnusOpeningLimit, sCollisionSize, false);
+	config_writeconfiglock.unlock();
+	if (!cwriteresult) {
+		return BSFixedString("0");
+	}
+
+	config_writeconfiglock.lock();
+	cwriteresult = ReadWriteCBPCConfig(runtimeDirectory + "Data\\SKSE\\Plugins\\CBPCollisionConfig_Female.txt", sVaginaOpeningLimit, sAnusOpeningLimit, sCollisionSize, true);
+	config_writeconfiglock.unlock();
+	if (!cwriteresult) {
+		return BSFixedString("0");
+	}
+
+	loadMasterConfig();
+	loadCollisionConfig();
+	loadExtraCollisionConfig();
+	ClearActors();
+	return BSFixedString("1");
+}
 
 bool RegisterFuncs(VMClassRegistry* registry)
 {
@@ -2803,6 +2905,9 @@ bool RegisterFuncs(VMClassRegistry* registry)
 
 	registry->RegisterFunction(
 		new NativeFunction2 <StaticFunctionTag, void, Actor*, BSFixedString> ("StopPhysics", "CBPCPluginScript", StopPhysics, registry));
+
+	registry->RegisterFunction(
+		new NativeFunction8<StaticFunctionTag, BSFixedString, BSFixedString, BSFixedString, BSFixedString, BSFixedString, BSFixedString, BSFixedString, BSFixedString, BSFixedString>("CBPCUpdatePhysics", "CBPCPluginScript", CBPCUpdatePhysics, registry));
 
 	LOG("CBPC registerFunction\n");
 	return true;
