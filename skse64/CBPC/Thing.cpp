@@ -798,56 +798,59 @@ void Thing::updatePelvis(Actor *actor)
 				frontPussyDefaultPos = posMap->second;
 			}
 
-			auto aleftpair = std::make_pair(actor->baseForm->formID, leftAnus.data);
-			posMap = thingDefaultPosList.find(aleftpair);
+			if (leftAnusObj && rightAnusObj && downAnusObj && upperAnusObj) {
 
-			if (posMap == thingDefaultPosList.end())
-			{
-				leftAnusDefaultPos = leftAnusObj->m_localTransform.pos;
-				thingDefaultPosList[aleftpair] = leftAnusDefaultPos;
-			}
-			else
-			{
-				leftAnusDefaultPos = posMap->second;
-			}
+				auto aleftpair = std::make_pair(actor->baseForm->formID, leftAnus.data);
+				posMap = thingDefaultPosList.find(aleftpair);
 
-			auto arightpair = std::make_pair(actor->baseForm->formID, rightAnus.data);
-			posMap = thingDefaultPosList.find(arightpair);
+				if (posMap == thingDefaultPosList.end())
+				{
+					leftAnusDefaultPos = leftAnusObj->m_localTransform.pos;
+					thingDefaultPosList[aleftpair] = leftAnusDefaultPos;
+				}
+				else
+				{
+					leftAnusDefaultPos = posMap->second;
+				}
 
-			if (posMap == thingDefaultPosList.end())
-			{
-				rightAnusDefaultPos = rightAnusObj->m_localTransform.pos;
-				thingDefaultPosList[arightpair] = rightAnusDefaultPos;
-			}
-			else
-			{
-				rightAnusDefaultPos = posMap->second;
-			}
+				auto arightpair = std::make_pair(actor->baseForm->formID, rightAnus.data);
+				posMap = thingDefaultPosList.find(arightpair);
 
-			auto aupperpair = std::make_pair(actor->baseForm->formID, upperAnus.data);
-			posMap = thingDefaultPosList.find(aupperpair);
+				if (posMap == thingDefaultPosList.end())
+				{
+					rightAnusDefaultPos = rightAnusObj->m_localTransform.pos;
+					thingDefaultPosList[arightpair] = rightAnusDefaultPos;
+				}
+				else
+				{
+					rightAnusDefaultPos = posMap->second;
+				}
 
-			if (posMap == thingDefaultPosList.end())
-			{
-				upperAnusDefaultPos = upperAnusObj->m_localTransform.pos;
-				thingDefaultPosList[aupperpair] = upperAnusDefaultPos;
-			}
-			else
-			{
-				upperAnusDefaultPos = posMap->second;
-			}
+				auto aupperpair = std::make_pair(actor->baseForm->formID, upperAnus.data);
+				posMap = thingDefaultPosList.find(aupperpair);
 
-			auto alowerpair = std::make_pair(actor->baseForm->formID, downAnus.data);
-			posMap = thingDefaultPosList.find(alowerpair);
+				if (posMap == thingDefaultPosList.end())
+				{
+					upperAnusDefaultPos = upperAnusObj->m_localTransform.pos;
+					thingDefaultPosList[aupperpair] = upperAnusDefaultPos;
+				}
+				else
+				{
+					upperAnusDefaultPos = posMap->second;
+				}
 
-			if (posMap == thingDefaultPosList.end())
-			{
-				lowerAnusDefaultPos = downAnusObj->m_localTransform.pos;
-				thingDefaultPosList[alowerpair] = lowerAnusDefaultPos;
-			}
-			else
-			{
-				lowerAnusDefaultPos = posMap->second;
+				auto alowerpair = std::make_pair(actor->baseForm->formID, downAnus.data);
+				posMap = thingDefaultPosList.find(alowerpair);
+
+				if (posMap == thingDefaultPosList.end())
+				{
+					lowerAnusDefaultPos = downAnusObj->m_localTransform.pos;
+					thingDefaultPosList[alowerpair] = lowerAnusDefaultPos;
+				}
+				else
+				{
+					lowerAnusDefaultPos = posMap->second;
+				}
 			}
 
 			thing_map_lock.unlock();
@@ -861,10 +864,12 @@ void Thing::updatePelvis(Actor *actor)
 		rightPusObj->m_localTransform.pos = rightPussyDefaultPos;
 		backPusObj->m_localTransform.pos = backPussyDefaultPos;
 		frontPusObj->m_localTransform.pos = frontPussyDefaultPos;
-		leftAnusObj->m_localTransform.pos = leftAnusDefaultPos;
-		rightAnusObj->m_localTransform.pos = rightAnusDefaultPos;
-		upperAnusObj->m_localTransform.pos = upperAnusDefaultPos;
-		downAnusObj->m_localTransform.pos = lowerAnusDefaultPos;
+		if (leftAnusObj && rightAnusObj && downAnusObj && upperAnusObj) {
+			leftAnusObj->m_localTransform.pos = leftAnusDefaultPos;
+			rightAnusObj->m_localTransform.pos = rightAnusDefaultPos;
+			upperAnusObj->m_localTransform.pos = upperAnusDefaultPos;
+			downAnusObj->m_localTransform.pos = lowerAnusDefaultPos;
+		}
 		thing_SetNode_lock.unlock();
 	}
 
@@ -979,32 +984,28 @@ void Thing::updatePelvis(Actor *actor)
 	RefreshNode(frontPusObj);
 
 	//
-	CalculateDiffVagina(leftVector, opening, true, true);
-	CalculateDiffVagina(rightVector, opening, true, false);
-	NormalizeNiPoint(leftVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
-	NormalizeNiPoint(rightVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
+	if (leftAnusObj && rightAnusObj && downAnusObj && upperAnusObj) {
+		CalculateDiffVagina(leftVector, opening, true, true);
+		CalculateDiffVagina(rightVector, opening, true, false);
+		NormalizeNiPoint(leftVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
+		NormalizeNiPoint(rightVector, anusOpeningLimit * -1.0f, anusOpeningLimit);
 
-	NiPoint3 upVector;
-	upVector.x = rightVector.y;
-	upVector.y = leftVector.x;
-	upVector.z = leftVector.z;
-	NiPoint3 downVector;
-	downVector.x = rightVector.y;
-	downVector.y = rightVector.x;
-	downVector.z = rightVector.z;
+		NiPoint3 upVector;
+		upVector.x = rightVector.y;
+		upVector.y = leftVector.x;
+		upVector.z = leftVector.z;
+		NiPoint3 downVector;
+		downVector.x = rightVector.y;
+		downVector.y = rightVector.x;
+		downVector.z = rightVector.z;
 
-	thing_SetNode_lock.lock();
-	leftAnusObj->m_localTransform.pos = leftAnusDefaultPos + downVector;
-	rightAnusObj->m_localTransform.pos = rightAnusDefaultPos + upVector;
-	upperAnusObj->m_localTransform.pos = upperAnusDefaultPos + rightVector;
-	downAnusObj->m_localTransform.pos = lowerAnusDefaultPos + leftVector;
-	thing_SetNode_lock.unlock();
-
-	/*
-	RefreshNode(leftAnusObj);
-	RefreshNode(rightAnusObj);
-	RefreshNode(upperAnusObj);
-	RefreshNode(downAnusObj);*/
+		thing_SetNode_lock.lock();
+		leftAnusObj->m_localTransform.pos = leftAnusDefaultPos + downVector;
+		rightAnusObj->m_localTransform.pos = rightAnusDefaultPos + upVector;
+		upperAnusObj->m_localTransform.pos = upperAnusDefaultPos + rightVector;
+		downAnusObj->m_localTransform.pos = lowerAnusDefaultPos + leftVector;
+		thing_SetNode_lock.unlock();
+	}
 
 	/*QueryPerformanceCounter(&endingTime);
 	elapsedMicroseconds.QuadPart = endingTime.QuadPart - startingTime.QuadPart;
