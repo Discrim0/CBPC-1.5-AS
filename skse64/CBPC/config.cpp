@@ -2808,12 +2808,9 @@ bool ReadWriteCBPCConfig(std::string filepath, std::string VaginaOpeningLimit, s
 			lines.push_back(line);
 		}
 		else if (pelvisnodeIsNext) {
-			//if (femaleconfig) {
-			line = "0,-1,-3.5," + CollisionSize + " | 0,-1,-3.5," + CollisionSize;
-			//}
-			/*else {
-				line = "5,-2,0,7 & -5,-2,0," + CollisionSize + " | 6,-2,0,7.5 & -6,-2,0," + CollisionSize;
-			}*/
+			if (femaleconfig) {
+				line = "0,-1,-3.5," + CollisionSize + " | 0,-1,-3.5," + CollisionSize;
+			}
 			lines.push_back(line);
 			pelvisnodeIsNext = false;
 		}
@@ -2853,7 +2850,7 @@ BSFixedString CBPCUpdatePhysics(StaticFunctionTag* base, BSFixedString isAnal, B
 		sCollisionSize = sPelvisCollisionSizeA;
 		if (sGroup == "1" && sVaginal == "1" && sfemboy == "0") {
 			sVaginaOpeningLimit = VaginaOpeningLimit;
-			sCollisionSize = (std::stof(sPelvisCollisionSizeV) + std::stof(sPelvisCollisionSizeA)) / 2;
+			sCollisionSize = sPelvisCollisionSizeA;
 		}
 	}
 	else
@@ -2864,15 +2861,15 @@ BSFixedString CBPCUpdatePhysics(StaticFunctionTag* base, BSFixedString isAnal, B
 
 	std::string	runtimeDirectory = GetRuntimeDirectory();
 	
-	/*config_writeconfiglock.lock();
+	config_writeconfiglock.lock();
 	bool cwriteresult = ReadWriteCBPCConfig(runtimeDirectory + "Data\\SKSE\\Plugins\\CBPCollisionConfig.txt", sVaginaOpeningLimit, sAnusOpeningLimit, sCollisionSize, false);
 	config_writeconfiglock.unlock();
 	if (!cwriteresult) {
 		return BSFixedString("0");
-	}*/
+	}
 
 	config_writeconfiglock.lock();
-	bool cwriteresult = ReadWriteCBPCConfig(runtimeDirectory + "Data\\SKSE\\Plugins\\CBPCollisionConfig_Female.txt", sVaginaOpeningLimit, sAnusOpeningLimit, sCollisionSize, true);
+	cwriteresult = ReadWriteCBPCConfig(runtimeDirectory + "Data\\SKSE\\Plugins\\CBPCollisionConfig_Female.txt", sVaginaOpeningLimit, sAnusOpeningLimit, sCollisionSize, true);
 	config_writeconfiglock.unlock();
 	if (!cwriteresult) {
 		return BSFixedString("0");
