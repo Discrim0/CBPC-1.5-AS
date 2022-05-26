@@ -2864,15 +2864,15 @@ BSFixedString CBPCUpdatePhysics(StaticFunctionTag* base, BSFixedString isAnal, B
 
 	std::string	runtimeDirectory = GetRuntimeDirectory();
 	
-	config_writeconfiglock.lock();
+	/*config_writeconfiglock.lock();
 	bool cwriteresult = ReadWriteCBPCConfig(runtimeDirectory + "Data\\SKSE\\Plugins\\CBPCollisionConfig.txt", sVaginaOpeningLimit, sAnusOpeningLimit, sCollisionSize, false);
 	config_writeconfiglock.unlock();
 	if (!cwriteresult) {
 		return BSFixedString("0");
-	}
+	}*/
 
 	config_writeconfiglock.lock();
-	cwriteresult = ReadWriteCBPCConfig(runtimeDirectory + "Data\\SKSE\\Plugins\\CBPCollisionConfig_Female.txt", sVaginaOpeningLimit, sAnusOpeningLimit, sCollisionSize, true);
+	bool cwriteresult = ReadWriteCBPCConfig(runtimeDirectory + "Data\\SKSE\\Plugins\\CBPCollisionConfig_Female.txt", sVaginaOpeningLimit, sAnusOpeningLimit, sCollisionSize, true);
 	config_writeconfiglock.unlock();
 	if (!cwriteresult) {
 		return BSFixedString("0");
